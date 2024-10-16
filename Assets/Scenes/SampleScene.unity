@@ -844,7 +844,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ae656b4430738346808ac99de492994, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  velocity: 10
+  velocity: 8
   movementDirection: {x: 0, y: 0, z: 1}
   animator: {fileID: 2096669413}
 --- !u!1001 &1331468363
