@@ -705,8 +705,9 @@ GameObject:
   - component: {fileID: 1202995249}
   - component: {fileID: 1202995248}
   - component: {fileID: 1202995252}
-  - component: {fileID: 1202995253}
   - component: {fileID: 1202995254}
+  - component: {fileID: 1202995255}
+  - component: {fileID: 1202995256}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -834,32 +835,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
---- !u!114 &1202995253
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1202995247}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 09c1452b23d84694b89e843796ef950c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 7
-  groundDrag: 5
-  jumpForce: 12
-  jumpCooldown: 0.25
-  airMultiplier: 0.4
-  walkSpeed: 0
-  sprintSpeed: 0
-  jumpKey: 32
-  playerHeight: 2
-  whatIsGround:
-    serializedVersion: 2
-    m_Bits: 1024
-  orientation: {fileID: 1883852027}
-  animator: {fileID: 2096669413}
 --- !u!95 &1202995254
 Animator:
   serializedVersion: 7
@@ -882,6 +857,58 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1202995255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202995247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24e2ceebef222064a8654af4540db1be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  walkSpeed: 2
+  sprintSpeed: 4
+  slideSpeed: 10
+  speedIncreaseMultiplier: 3
+  slopeIncreaseMultiplier: 3
+  groundDrag: 2
+  jumpForce: 12
+  jumpCooldown: 0.3
+  airMultiplier: 0.25
+  crouchSpeed: 2
+  crouchYScale: 2
+  jumpKey: 32
+  sprintKey: 304
+  crouchKey: 306
+  playerHeight: 2
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 1024
+  maxSlopeAngle: 2
+  orientation: {fileID: 1883852027}
+  state: 0
+  sliding: 0
+--- !u!114 &1202995256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202995247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 120bb3d123565464abe34038d12dd754, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  orientation: {fileID: 1883852027}
+  playerObj: {fileID: 2096669412}
+  maxSlideTime: 0.75
+  slideForce: 200
+  slideYScale: 0.5
+  slideKey: 306
 --- !u!1001 &1331468363
 PrefabInstance:
   m_ObjectHideFlags: 0
