@@ -43,7 +43,11 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
     private bool exitingSlope;
-    
+
+    [Header("Detección de techo bajo")]
+    public float alturaCabeza; // Altura del jugador desde los pies hasta la cabeza
+    public LayerMask whatIsObstaculo; // Para definir lo que se considera un obstáculo superior
+    bool obstruidoArriba;
 
     public Transform orientation;
 
@@ -78,6 +82,9 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void Update()
     {
+        // Detección de techo bajo
+        obstruidoArriba = Physics.Raycast(transform.position, Vector3.up, alturaCabeza, whatIsObstaculo);
+
         // ground check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
@@ -103,7 +110,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         verticalInput = Input.GetAxisRaw("Vertical");
 
         // when to jump
-        if(Input.GetKey(jumpKey) && readyToJump && grounded)
+        if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
 
@@ -122,7 +129,14 @@ public class PlayerMovementAdvanced : MonoBehaviour
         // stop crouch
         if (Input.GetKeyUp(crouchKey))
         {
-            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+            // Detectamos si hay algo obstruyendo por encima del jugador
+            obstruidoArriba = Physics.Raycast(transform.position, Vector3.up, alturaCabeza, whatIsObstaculo);
+
+            // Solo nos levantamos si no hay obstrucción
+            if (!obstruidoArriba)
+            {
+                transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+            }
         }
     }
 
@@ -148,7 +162,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
 
         // Mode - Sprinting
-        else if(grounded && Input.GetKey(sprintKey))
+        else if (grounded && Input.GetKey(sprintKey))
         {
             state = MovementState.sprinting;
             desiredMoveSpeed = sprintSpeed;
@@ -168,7 +182,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
 
         // check if desiredMoveSpeed has changed drastically
-        if(Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && moveSpeed != 0)
+        if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && moveSpeed != 0)
         {
             StopAllCoroutines();
             StartCoroutine(SmoothlyLerpMoveSpeed());
@@ -223,11 +237,11 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
 
         // on ground
-        else if(grounded)
+        else if (grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
 
         // in air
-        else if(!grounded)
+        else if (!grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
         // turn gravity off while on slope
@@ -275,7 +289,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     public bool OnSlope()
     {
-        if(Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
             return angle < maxSlopeAngle && angle != 0;
