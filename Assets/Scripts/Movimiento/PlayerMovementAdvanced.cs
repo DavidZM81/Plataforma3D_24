@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.ProBuilder.MeshOperations;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 public class PlayerMovementAdvanced : MonoBehaviour
 {
@@ -45,8 +47,8 @@ public class PlayerMovementAdvanced : MonoBehaviour
     private bool exitingSlope;
 
     [Header("Detección de techo bajo")]
-    public float alturaCabeza; // Altura del jugador desde los pies hasta la cabeza
-    public LayerMask whatIsObstaculo; // Para definir lo que se considera un obstáculo superior
+    public float alturaCabeza;
+    public LayerMask whatIsObstaculo;
     bool obstruidoArriba;
 
     public Transform orientation;
@@ -57,17 +59,9 @@ public class PlayerMovementAdvanced : MonoBehaviour
     Vector3 moveDirection;
 
     Rigidbody rb;
-
-    public MovementState state;
-    public enum MovementState
-    {
-        walking,
-        sprinting,
-        crouching,
-        sliding,
-        air
-    }
-
+    private Animator animator;
+  
+ 
     public bool sliding;
 
     private void Start()
@@ -78,6 +72,11 @@ public class PlayerMovementAdvanced : MonoBehaviour
         readyToJump = true;
 
         startYScale = transform.localScale.y;
+
+        // Obtener referencia al Animator
+        animator = GetComponent<Animator>();
+
+        moveSpeed = 5;
     }
 
     private void Update()
@@ -90,13 +89,36 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
         MyInput();
         SpeedControl();
-        StateHandler();
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            moveSpeed = 10;
+        }
+        else
+        {
+            moveSpeed = 5;
+        }
+        // Actualizar los parámetros del Animator
+
+        animator.updateMode = AnimatorUpdateMode.Normal;
 
         // handle drag
         if (grounded)
             rb.linearDamping = groundDrag;
         else
             rb.linearDamping = 0;
+
+        float movX = Input.GetAxis("Horizontal");
+        float movZ = Input.GetAxis("Vertical");
+        animator.SetFloat("IzquierdaDerecha", movX);
+        animator.SetFloat("AlanteAtras", movZ);
+
+        Vector3 movement = new Vector3(movX, 0, movZ).normalized;
+        if (movement.magnitude > 0)
+        {
+            transform.Translate(movement * moveSpeed * Time.deltaTime);
+
+        }
     }
 
     private void FixedUpdate()
@@ -106,8 +128,10 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void MyInput()
     {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
+       
+
+        
+      
 
         // when to jump
         if (Input.GetKey(jumpKey) && readyToJump && grounded)
@@ -129,10 +153,8 @@ public class PlayerMovementAdvanced : MonoBehaviour
         // stop crouch
         if (Input.GetKeyUp(crouchKey))
         {
-            // Detectamos si hay algo obstruyendo por encima del jugador
             obstruidoArriba = Physics.Raycast(transform.position, Vector3.up, alturaCabeza, whatIsObstaculo);
 
-            // Solo nos levantamos si no hay obstrucción
             if (!obstruidoArriba)
             {
                 transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
@@ -140,64 +162,10 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
     }
 
-    private void StateHandler()
-    {
-        // Mode - Sliding
-        if (sliding)
-        {
-            state = MovementState.sliding;
-
-            if (OnSlope() && rb.linearVelocity.y < 0.1f)
-                desiredMoveSpeed = slideSpeed;
-
-            else
-                desiredMoveSpeed = sprintSpeed;
-        }
-
-        // Mode - Crouching
-        else if (Input.GetKey(crouchKey))
-        {
-            state = MovementState.crouching;
-            desiredMoveSpeed = crouchSpeed;
-        }
-
-        // Mode - Sprinting
-        else if (grounded && Input.GetKey(sprintKey))
-        {
-            state = MovementState.sprinting;
-            desiredMoveSpeed = sprintSpeed;
-        }
-
-        // Mode - Walking
-        else if (grounded)
-        {
-            state = MovementState.walking;
-            desiredMoveSpeed = walkSpeed;
-        }
-
-        // Mode - Air
-        else
-        {
-            state = MovementState.air;
-        }
-
-        // check if desiredMoveSpeed has changed drastically
-        if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && moveSpeed != 0)
-        {
-            StopAllCoroutines();
-            StartCoroutine(SmoothlyLerpMoveSpeed());
-        }
-        else
-        {
-            moveSpeed = desiredMoveSpeed;
-        }
-
-        lastDesiredMoveSpeed = desiredMoveSpeed;
-    }
+   
 
     private IEnumerator SmoothlyLerpMoveSpeed()
     {
-        // smoothly lerp movementSpeed to desired value
         float time = 0;
         float difference = Mathf.Abs(desiredMoveSpeed - moveSpeed);
         float startValue = moveSpeed;
@@ -224,10 +192,8 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void MovePlayer()
     {
-        // calculate movement direction
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        // on slope
         if (OnSlope() && !exitingSlope)
         {
             rb.AddForce(GetSlopeMoveDirection(moveDirection) * moveSpeed * 20f, ForceMode.Force);
@@ -236,33 +202,26 @@ public class PlayerMovementAdvanced : MonoBehaviour
                 rb.AddForce(Vector3.down * 80f, ForceMode.Force);
         }
 
-        // on ground
         else if (grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
 
-        // in air
         else if (!grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
-        // turn gravity off while on slope
         rb.useGravity = !OnSlope();
     }
 
     private void SpeedControl()
     {
-        // limiting speed on slope
         if (OnSlope() && !exitingSlope)
         {
             if (rb.linearVelocity.magnitude > moveSpeed)
                 rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
         }
-
-        // limiting speed on ground or in air
         else
         {
             Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
-            // limit velocity if needed
             if (flatVel.magnitude > moveSpeed)
             {
                 Vector3 limitedVel = flatVel.normalized * moveSpeed;
@@ -275,7 +234,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
     {
         exitingSlope = true;
 
-        // reset y velocity
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
