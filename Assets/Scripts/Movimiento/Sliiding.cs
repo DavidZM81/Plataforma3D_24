@@ -23,7 +23,6 @@ public class Sliding : MonoBehaviour
     private float horizontalInput;
     private float verticalInput;
 
-
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -62,20 +61,22 @@ public class Sliding : MonoBehaviour
 
     private void SlidingMovement()
     {
-        Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+        // Usar la direcci�n de la c�mara para el deslizamiento
+        Vector3 cameraForward = Camera.main.transform.forward;
+        Vector3 cameraRight = Camera.main.transform.right;
+        cameraForward.y = 0;  // Mantener en el plano horizontal
+        cameraRight.y = 0;
 
-        // sliding normal
+        Vector3 slideDirection = (cameraForward * verticalInput + cameraRight * horizontalInput).normalized;
+
         if (!pm.OnSlope() || rb.linearVelocity.y > -0.1f)
         {
-            rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
-
+            rb.AddForce(slideDirection * slideForce, ForceMode.Force);
             slideTimer -= Time.deltaTime;
         }
-
-        // sliding down a slope
         else
         {
-            rb.AddForce(pm.GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
+            rb.AddForce(pm.GetSlopeMoveDirection(slideDirection) * slideForce, ForceMode.Force);
         }
 
         if (slideTimer <= 0)

@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.ProBuilder.MeshOperations;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 public class PlayerMovementAdvanced : MonoBehaviour
 {
@@ -46,7 +44,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
     private RaycastHit slopeHit;
     private bool exitingSlope;
 
-    [Header("Detecci髇 de techo bajo")]
+    [Header("Detecci贸n de techo bajo")]
     public float alturaCabeza;
     public LayerMask whatIsObstaculo;
     bool obstruidoArriba;
@@ -60,8 +58,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     Rigidbody rb;
     private Animator animator;
-  
- 
+
     public bool sliding;
 
     private void Start()
@@ -81,7 +78,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void Update()
     {
-        // Detecci髇 de techo bajo
+        // Detecci贸n de techo bajo
         obstruidoArriba = Physics.Raycast(transform.position, Vector3.up, alturaCabeza, whatIsObstaculo);
 
         // ground check
@@ -98,8 +95,8 @@ public class PlayerMovementAdvanced : MonoBehaviour
         {
             moveSpeed = 5;
         }
-        // Actualizar los par醡etros del Animator
 
+        // Actualizar los par谩metros del Animator
         animator.updateMode = AnimatorUpdateMode.Normal;
 
         // handle drag
@@ -108,16 +105,23 @@ public class PlayerMovementAdvanced : MonoBehaviour
         else
             rb.linearDamping = 0;
 
+        // Animaci贸n basada en la entrada
         float movX = Input.GetAxis("Horizontal");
         float movZ = Input.GetAxis("Vertical");
         animator.SetFloat("IzquierdaDerecha", movX);
         animator.SetFloat("AlanteAtras", movZ);
 
-        Vector3 movement = new Vector3(movX, 0, movZ).normalized;
-        if (movement.magnitude > 0)
-        {
-            transform.Translate(movement * moveSpeed * Time.deltaTime);
+        // Definir la direcci贸n de movimiento en funci贸n de la c谩mara
+        Vector3 cameraForward = Camera.main.transform.forward;
+        Vector3 cameraRight = Camera.main.transform.right;
+        cameraForward.y = 0;  // Asegurarse de que el jugador se mantenga en el mismo plano
+        cameraRight.y = 0;
 
+        moveDirection = (cameraForward * movZ + cameraRight * movX).normalized;
+
+        if (moveDirection.magnitude > 0)
+        {
+            transform.Translate(moveDirection * moveSpeed * Time.deltaTime, Space.World);
         }
     }
 
@@ -128,11 +132,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void MyInput()
     {
-       
-
-        
-      
-
         // when to jump
         if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
@@ -162,8 +161,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
     }
 
-   
-
     private IEnumerator SmoothlyLerpMoveSpeed()
     {
         float time = 0;
@@ -192,8 +189,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void MovePlayer()
     {
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-
+        // A帽adir fuerza en la direcci贸n basada en la c谩mara
         if (OnSlope() && !exitingSlope)
         {
             rb.AddForce(GetSlopeMoveDirection(moveDirection) * moveSpeed * 20f, ForceMode.Force);
@@ -201,12 +197,10 @@ public class PlayerMovementAdvanced : MonoBehaviour
             if (rb.linearVelocity.y > 0)
                 rb.AddForce(Vector3.down * 80f, ForceMode.Force);
         }
-
         else if (grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-
-        else if (!grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            rb.AddForce(moveDirection * moveSpeed * 10f, ForceMode.Force);
+        else
+            rb.AddForce(moveDirection * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
         rb.useGravity = !OnSlope();
     }
@@ -238,10 +232,10 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
+
     private void ResetJump()
     {
         readyToJump = true;
-
         exitingSlope = false;
     }
 
@@ -252,7 +246,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
             return angle < maxSlopeAngle && angle != 0;
         }
-
         return false;
     }
 
