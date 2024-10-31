@@ -6,9 +6,9 @@ public class PlayerMovementAdvanced : MonoBehaviour
 {
     [Header("Movement")]
     private float moveSpeed;
-    public float walkSpeed;
-    public float sprintSpeed;
-    public float slideSpeed;
+    public float walkSpeed = 4f;
+    public float sprintSpeed = 6f;
+    public float slideSpeed = 5f;
 
     private float desiredMoveSpeed;
     private float lastDesiredMoveSpeed;
@@ -73,7 +73,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         // Obtener referencia al Animator
         animator = GetComponent<Animator>();
 
-        moveSpeed = 5;
+        moveSpeed = walkSpeed;
     }
 
     private void Update()
@@ -87,13 +87,14 @@ public class PlayerMovementAdvanced : MonoBehaviour
         MyInput();
         SpeedControl();
 
-        if (Input.GetKeyDown(KeyCode.LeftShift))
+        // Activar o desactivar la velocidad de sprint
+        if (Input.GetKey(sprintKey))
         {
-            moveSpeed = 10;
+            moveSpeed = sprintSpeed;
         }
         else
         {
-            moveSpeed = 5;
+            moveSpeed = walkSpeed;
         }
 
         // Actualizar los parámetros del Animator
